@@ -14,7 +14,7 @@
       ]
     }},
   "variables": {
-    "daweinslasample10Name": "[concat('daweinslasample10', uniqueString(resourceGroup().id))]"},
+    "daweinslasample10Name": "daweinslasample10"},
   "resources": [
     {
       "name": "[variables('daweinslasample10Name')]",
