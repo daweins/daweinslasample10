@@ -14,7 +14,7 @@
       ]
     }},
   "variables": {
-    "daweinslasample10Name": "daweinslasample10"},
+    "daweinslasample10Name": "daweinslasample10"},  
   "resources": [
     {
       "name": "[variables('daweinslasample10Name')]",
