@@ -109,8 +109,8 @@
       "location": "[parameters('daweinslasample10Location')]",
       "apiVersion": "2016-06-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/connections', parameters('twitter_1_Connection_Name'))]",
-        "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]"
+        "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]",
+        "[resourceId('Microsoft.Web/connections', parameters('twitter_1_Connection_Name'))]"
       ],
       "tags": {
         "displayName": "daweinslasample10"
@@ -119,29 +119,25 @@
         "definition": {
           "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
           "actions": {
-            "Create_blob": {
-              "type": "ApiConnection",
-              "inputs": {
-                "host": {
-                  "connection": {
-                    "name": "@parameters('$connections')['azureblob']['connectionId']"
-                  }
-                },
-                "method": "post",
-                "body": "@triggerBody()?['TweetText']",
-                "path": "/datasets/default/files",
-                "queries": {
-                  "folderPath": "@triggerBody()?['UserDetails']?['UserName']",
-                  "name": "tweets.txt",
-                  "queryParametersSingleEncoded": true
+            "For_each": {
+              "type": "Foreach",
+              "foreach": "@triggerBody()",
+              "actions": {
+                "Post_a_tweet": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['twitter_1']['connectionId']"
+                      }
+                    },
+                    "method": "post",
+                    "path": "/posttweet"
+                  },
+                  "runAfter": {}
                 }
               },
-              "runAfter": {},
-              "runtimeConfiguration": {
-                "contentTransfer": {
-                  "transferMode": "Chunked"
-                }
-              }
+              "runAfter": {}
             }
           },
           "parameters": {
@@ -151,25 +147,29 @@
             }
           },
           "triggers": {
-            "When_a_new_tweet_is_posted": {
+            "When_a_blob_is_added_or_modified_(properties_only)": {
               "type": "ApiConnection",
               "inputs": {
                 "host": {
                   "connection": {
-                    "name": "@parameters('$connections')['twitter_1']['connectionId']"
+                    "name": "@parameters('$connections')['azureblob']['connectionId']"
                   }
                 },
                 "method": "get",
-                "path": "/onnewtweet",
+                "path": "/datasets/default/triggers/batch/onupdatedfile",
                 "queries": {
-                  "searchQuery": "#daweins"
+                  "folderId": "JTJmdGVzdA==",
+                  "maxFileCount": 10
                 }
               },
               "recurrence": {
                 "frequency": "Minute",
-                "interval": 3
+                "interval": 1
               },
-              "splitOn": "@triggerBody()?['value']"
+              "metadata": {
+                "JTJmdGVzdA==": "/test"
+              },
+              "splitOn": "@triggerBody()"
             }
           },
           "contentVersion": "1.0.0.0",
@@ -178,15 +178,15 @@
         "parameters": {
           "$connections": {
             "value": {
-              "twitter_1": {
-                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('daweinslasample10Location'), '/managedApis/', 'twitter')]",
-                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('twitter_1_Connection_Name'))]",
-                "connectionName": "[parameters('twitter_1_Connection_Name')]"
-              },
               "azureblob": {
                 "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('daweinslasample10Location'), '/managedApis/', 'azureblob')]",
                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]",
                 "connectionName": "[parameters('azureblob_1_Connection_Name')]"
+              },
+              "twitter_1": {
+                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('daweinslasample10Location'), '/managedApis/', 'twitter')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('twitter_1_Connection_Name'))]",
+                "connectionName": "[parameters('twitter_1_Connection_Name')]"
               }
             }
           }
